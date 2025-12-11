@@ -6,7 +6,6 @@ BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
 OUTPUT_FILE = "final.conf"
 
-# 支持的 Loon 段落
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
     "Host", "Proxy", "Proxy Group", "General", "Mitm"
@@ -52,26 +51,32 @@ def parse_sections(content):
     return sections
 
 def merge_sections(base, patch):
-    """Merge patch sections into base with deduplication"""
+    """Merge patch sections into base with deduplication and remove extra empty lines"""
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
-            continue  # skip unknown sections
-        patch_set = list(dict.fromkeys([l for l in patch_lines if l.strip() != ""]))
-        if sec not in base:
-            # section doesn't exist → append
-            base[sec] = patch_set
-        else:
-            merged = list(dict.fromkeys(base[sec] + patch_set))
-            base[sec] = merged
+            continue
+
+        # 去掉 patch 段首尾空行
+        patch_lines_clean = [l for l in patch_lines if l.strip() != ""]
+        # 去掉 base 段首尾空行
+        base_lines_clean = base.get(sec, [])
+        base_lines_clean = [l for l in base_lines_clean if l.strip() != ""]
+
+        # 合并去重
+        merged = list(dict.fromkeys(base_lines_clean + patch_lines_clean))
+        base[sec] = merged
+
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content"""
+    """Rebuild configuration content without extra empty lines"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
-        out.extend(lines)
-        out.append("")  # blank line between sections
+        # 去掉段内空行
+        cleaned_lines = [l for l in lines if l.strip() != ""]
+        out.extend(cleaned_lines)
+        out.append("")  # 段落间保留一个空行
     return "\n".join(out).rstrip() + "\n"
 
 def main():
