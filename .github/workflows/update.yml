@@ -1,0 +1,35 @@
+name: Update Loon Config
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"     # 每 6 小时更新一次
+  workflow_dispatch:          # 允许手动触发
+  push:
+    paths:
+      - "patch.conf"       # 你更新 patch 时自动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Combine config
+        run: python combine.py
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add final.conf
+          git commit -m "Auto update final.conf" || echo "No changes"
+          git push
