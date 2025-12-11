@@ -4,7 +4,7 @@ import requests
 
 BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
-OUTPUT_FILE = "final.conf"
+OUTPUT_FILE = "final.lcf"
 
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
