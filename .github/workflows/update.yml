@@ -30,6 +30,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add final.conf
-          git commit -m "Auto update final.conf" || echo "No changes"
+          git add final.lcf
+          git commit -m "Auto update final.lcf" || echo "No changes"
           git push
