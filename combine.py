@@ -1,118 +1,73 @@
-import requests
+#!/usr/bin/env python3
+import re
 
-BASE_URL_FILE = "base_config.txt"
-PATCH_FILE = "patch.conf"
-OUTPUT_FILE = "final.conf"
-
-# 支持的段落
-SECTIONS = ["[Plugin]", "[Rule]", "[Rewrite]", "[Host]", "[URL Rewrite]"]
-
-def load_patch_by_section(text):
-    """按段落拆分补丁"""
-    result = {s: [] for s in SECTIONS}
+def parse_sections(content):
+    """Parse all [Section] blocks into an ordered dict structure."""
+    sections = {}
     current = None
+    lines = []
 
-    for line in text.splitlines():
-        striped = line.strip()
-        if striped in SECTIONS:
-            current = striped
-            continue
-        if current and striped and not striped.startswith("#"):
-            result[current].append(line.strip())
-    return result
+    for line in content.splitlines(keepends=False):
+        m = re.match(r"^\[(.+?)\]\s*$", line)
+        if m:
+            if current:
+                sections[current] = lines
+            current = m.group(1).strip()
+            lines = []
+        else:
+            if current:
+                lines.append(line)
 
+    if current:
+        sections[current] = lines
 
-def extract_sections(text):
-    """把 base 配置按段落拆分"""
-    result = {s: [] for s in SECTIONS}
-    current = None
-
-    for line in text.splitlines():
-        striped = line.strip()
-        if striped in SECTIONS:
-            current = striped
-            continue
-        if current and striped and not striped.startswith("#"):
-            result[current].append(line.strip())
-    return result
+    return sections
 
 
-def merge_and_dedupe(base_map, patch_map):
-    """合并 + 去重"""
-    merged = {}
+def merge_sections(base, patch):
+    """Merge patch sections into base sections with deduplication."""
+    for sec, patch_lines in patch.items():
+        patch_set = list(dict.fromkeys([l for l in patch_lines if l.strip() != ""]))
 
-    for section in SECTIONS:
-        # base + patch 合并
-        combined = base_map[section] + patch_map[section]
+        if sec not in base:
+            # Section doesn't exist → append directly
+            base[sec] = patch_set
+        else:
+            # Section exists → merge with dedupe
+            merged = list(dict.fromkeys(
+                base[sec] + patch_set
+            ))
+            base[sec] = merged
 
-        # 去重，保持原顺序
-        seen = set()
-        result = []
-        for item in combined:
-            if item not in seen:
-                seen.add(item)
-                result.append(item)
-        merged[section] = result
-
-    return merged
+    return base
 
 
-def rebuild_text(base_text, merged_map):
-    """把合并结果插回 base 文件"""
-    lines = base_text.splitlines()
-    output = []
-    current_section = None
-    inserted = {s: False for s in SECTIONS}
-
-    for line in lines:
-        striped = line.strip()
-
-        if striped in SECTIONS:
-            current_section = striped
-            output.append(line)
-
-            # 插入去重后的内容
-            output.extend(merged_map[current_section])
-            inserted[current_section] = True
-            continue
-
-        # 非 section 的行照抄
-        output.append(line)
-
-    # 如果某段落不存在于原文件，追加
-    for section in SECTIONS:
-        if not inserted[section] and merged_map[section]:
-            output.append("")
-            output.append(section)
-            output.extend(merged_map[section])
-
-    return "\n".join(output)
+def generate_output(sections):
+    """Rebuild file content."""
+    out = []
+    for sec, lines in sections.items():
+        out.append(f"[{sec}]")
+        out.extend(lines)
+        out.append("")  # blank line between sections
+    return "\n".join(out).rstrip() + "\n"
 
 
 def main():
-    # 读取 base URL
-    with open(BASE_URL_FILE, "r") as f:
-        url = f.read().strip()
+    with open("base_config.conf", "r", encoding="utf-8") as f:
+        base_content = f.read()
 
-    base_text = requests.get(url).text
+    with open("patch.conf", "r", encoding="utf-8") as f:
+        patch_content = f.read()
 
-    with open(PATCH_FILE, "r") as f:
-        patch_text = f.read()
+    base_sections = parse_sections(base_content)
+    patch_sections = parse_sections(patch_content)
 
-    # 拆分
-    base_map = extract_sections(base_text)
-    patch_map = load_patch_by_section(patch_text)
+    merged = merge_sections(base_sections, patch_sections)
 
-    # 合并 + 去重
-    merged_map = merge_and_dedupe(base_map, patch_map)
+    final = generate_output(merged)
 
-    # 重建配置
-    final_text = rebuild_text(base_text, merged_map)
-
-    with open(OUTPUT_FILE, "w") as f:
-        f.write(final_text)
-
-    print("final.conf updated and deduplicated successfully")
+    with open("final.conf", "w", encoding="utf-8") as f:
+        f.write(final)
 
 
 if __name__ == "__main__":
