@@ -1,4 +1,4 @@
 # proxy_conf_convert
-Combine Loon/QX.... 's conf with additional rule.
+Combine Loon's conf with additional rule.
 
-https://github.com/ssacpklnm/proxy-auto-conf/raw/refs/heads/main/final.lcf
+https://raw.githubusercontent.com/ssacpklnm/proxy-auto-conf/refs/heads/main/final.lcf
