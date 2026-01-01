@@ -1,1 +1,1 @@
-https://loon.103516.xyz/Config/Loon_RawConfig.lcf
+https://raw.githubusercontent.com/luestr/ProxyResource/refs/heads/main/Tool/Loon/Lcf/zh-CN/Loon_Manual_Select_Config_By_iKeLee.lcf
