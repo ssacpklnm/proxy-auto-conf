@@ -8,7 +8,7 @@ OUTPUT_FILE = "final.lcf"
 
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Remote Filter", "Host", "Proxy", "Proxy Group", "General", "Mitm"
+    "Host", "Proxy", "Proxy Group", "General", "Mitm"
 ]
 
 HEADERS = {
@@ -35,7 +35,7 @@ def download_base(url):
     return resp.text
 
 def parse_sections(content):
-    """Parse all [Section] blocks into an ordered dict"""
+    """Parse all [Section] blocks into a dict"""
     sections = {}
     current = None
     lines = []
@@ -43,12 +43,12 @@ def parse_sections(content):
     for line in content.splitlines():
         m = re.match(r"^\[(.+?)\]\s*$", line)
         if m:
-            if current is not None:
+            if current:
                 sections[current] = lines
             current = m.group(1).strip()
             lines = []
         else:
-            if current is not None:
+            if current:
                 lines.append(line)
 
     if current:
@@ -69,8 +69,10 @@ def merge_sections(base, patch):
 
         for pline in patch_lines:
             pline = pline.rstrip("\n")
-            if not pline or pline.startswith("#"):
-                continue
+            if not pline:
+                continue  # 忽略空行
+            if pline.startswith("#"):
+                continue  # 注释由原文件保留
 
             if pline.startswith("add|"):
                 content_to_add = pline[len("add|") :]
@@ -92,11 +94,19 @@ def merge_sections(base, patch):
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content, preserving comments"""
+    """Rebuild configuration content, preserve comments, remove extra empty lines"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
-        out.extend(lines)
+        prev_empty = False
+        for l in lines:
+            if l.strip() == "":
+                if not prev_empty:
+                    out.append("")  # 保留单个空行
+                    prev_empty = True
+            else:
+                out.append(l)
+                prev_empty = False
         out.append("")  # 段落间保留一个空行
     return "\n".join(out).rstrip() + "\n"
 
@@ -116,13 +126,13 @@ def main():
     base_sections = parse_sections(base_content)
     patch_sections = parse_sections(patch_content)
 
-    # 5. Merge sections (支持 add/delete/modify)
+    # 5. Merge sections (add/delete/modify)
     merged_sections = merge_sections(base_sections, patch_sections)
 
     # 6. Generate output
     final_content = generate_output(merged_sections)
 
-    # 7. Write final.lcf
+    # 7. Write final output
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
 
