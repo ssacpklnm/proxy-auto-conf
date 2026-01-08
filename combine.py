@@ -6,11 +6,13 @@ BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
 OUTPUT_FILE = "final.lcf"
 
+# 支持的段落
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Host", "Proxy", "Proxy Group", "General", "Mitm"
+    "Remote Filter", "Host", "Proxy", "Proxy Group", "General", "Mitm"
 ]
 
+# Loon iOS UA
 HEADERS = {
     "User-Agent": "Loon/3.2.1 (iPhone; iOS 17.0)",
     "Accept": "*/*",
@@ -35,7 +37,7 @@ def download_base(url):
     return resp.text
 
 def parse_sections(content):
-    """Parse all [Section] blocks into a dict"""
+    """Parse all [Section] blocks into an ordered dict"""
     sections = {}
     current = None
     lines = []
@@ -43,70 +45,68 @@ def parse_sections(content):
     for line in content.splitlines():
         m = re.match(r"^\[(.+?)\]\s*$", line)
         if m:
-            if current:
+            if current is not None:
                 sections[current] = lines
             current = m.group(1).strip()
             lines = []
         else:
-            if current:
+            if current is not None:
                 lines.append(line)
-
-    if current:
+    if current is not None:
         sections[current] = lines
-
     return sections
 
+def apply_patch_line(base_lines, patch_line):
+    """Apply add/delete/modify operations"""
+    patch_line = patch_line.strip()
+    if not patch_line:
+        return base_lines
+
+    if patch_line.startswith("add|"):
+        _, line_content = patch_line.split("|", 1)
+        # 添加到末尾，去重
+        if line_content not in base_lines:
+            base_lines.append(line_content)
+    elif patch_line.startswith("delete|"):
+        _, keyword = patch_line.split("|", 1)
+        # 模糊匹配删除
+        base_lines = [l for l in base_lines if keyword not in l]
+    elif patch_line.startswith("modify|"):
+        _, match_content, new_line = patch_line.split("|", 2)
+        # 精确匹配并替换整行
+        base_lines = [new_line if match_content in l else l for l in base_lines]
+    else:
+        # 普通行，直接添加去重
+        if patch_line not in base_lines:
+            base_lines.append(patch_line)
+
+    return base_lines
+
 def merge_sections(base, patch):
-    """Merge patch sections into base with add/delete/modify"""
+    """Merge patch sections into base with deduplication"""
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
             continue
 
-        if sec not in base:
-            base[sec] = []
-
-        base_lines = base[sec]
+        base_lines = base.get(sec, [])
 
         for pline in patch_lines:
-            pline = pline.rstrip("\n")
-            if not pline:
-                continue  # 忽略空行
-            if pline.startswith("#"):
-                continue  # 注释由原文件保留
+            base_lines = apply_patch_line(base_lines, pline)
 
-            if pline.startswith("add|"):
-                content_to_add = pline[len("add|") :]
-                if content_to_add not in base_lines:
-                    base_lines.append(content_to_add)
-            elif pline.startswith("delete|"):
-                key = pline[len("delete|") :]
-                base_lines = [l for l in base_lines if key not in l]
-            elif pline.startswith("modify|"):
-                parts = pline.split("|", 2)
-                if len(parts) == 3:
-                    match_key, new_line = parts[1], parts[2]
-                    for i, l in enumerate(base_lines):
-                        if match_key in l:
-                            base_lines[i] = new_line
-
+        # 去掉段首尾空行
+        base_lines = [l for l in base_lines if l.strip() != ""]
         base[sec] = base_lines
 
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content, preserve comments, remove extra empty lines"""
+    """Rebuild configuration content without extra empty lines"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
-        prev_empty = False
-        for l in lines:
-            if l.strip() == "":
-                if not prev_empty:
-                    out.append("")  # 保留单个空行
-                    prev_empty = True
-            else:
-                out.append(l)
-                prev_empty = False
+        # 保留注释和内容，段内去掉空行
+        cleaned_lines = [l for l in lines if l.strip() != ""]
+        out.extend(cleaned_lines)
         out.append("")  # 段落间保留一个空行
     return "\n".join(out).rstrip() + "\n"
 
@@ -126,13 +126,13 @@ def main():
     base_sections = parse_sections(base_content)
     patch_sections = parse_sections(patch_content)
 
-    # 5. Merge sections (add/delete/modify)
+    # 5. Merge sections
     merged_sections = merge_sections(base_sections, patch_sections)
 
     # 6. Generate output
     final_content = generate_output(merged_sections)
 
-    # 7. Write final output
+    # 7. Write final.conf
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
 
