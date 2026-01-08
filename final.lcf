@@ -73,8 +73,13 @@ Sub-RA = NameRegex, FilterKey = "^(?=.*(.*))(?!.*((?i)🇭🇰|🇲🇴|🇹🇼
 
 
 [Proxy Group]
+手动选择 = select,DIRECT,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,Rare Areas,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/Select.png
+时延优选 = url-test,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/UrlTest.png
+故障转移 = fallback,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,max-timeout = 2000,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/Fallback.png
+负载均衡 = load-balance,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,max-timeout = 2000,algorithm = pcc,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/LoadBalance.png
 Global = select,Sub-ALL,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/WorldMap.png
 Hong Kong = url-test,Sub-HK,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/HongKong.png
+Macao = url-test,Sub-MO,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/Macao.png
 Taiwan = url-test,Sub-TW,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/Taiwan.png
 Japan = url-test,Sub-JP,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/Japan.png
 South Korea = url-test,Sub-KR,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/SouthKorea.png
@@ -82,6 +87,17 @@ Singapore = url-test,Sub-SG,interval = 60,tolerance = 50,img-url = https://raw.g
 United States = url-test,Sub-US,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/UnitedStates.png
 United Kingdom = url-test,Sub-UK,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/UnitedKingdom.png
 Rare Areas = select,Sub-RA,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/UnitedNations.png
+AI = url-test,Sub-AI,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/ChatGPT.png
+TikTok = url-test,Sub-TikTok,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/TikTok-02.png
+GitHub = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/GitHub-02.png
+Microsoft = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Microsoft.png
+Google = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Google.png
+Instagram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Instagram-02.png
+X = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Twitter-02.png
+Telegram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Telegram-01.png
+YouTube = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/YouTube.png
+Netflix = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Netflix-02.png
+Streaming = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
 
 
 [Proxy Chain]
