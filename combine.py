@@ -68,12 +68,12 @@ def apply_patch(base_sections, patch_sections):
         base_lines = base_sections.get(sec, [])
 
         for pline in patch_lines:
-            pline = pline.strip()
+            pline = pline.rstrip("\n")  # 保留开头空格
             if not pline or pline.startswith("#"):
                 continue
 
             if pline.startswith("add|"):
-                # 直接添加，去掉前缀
+                # 直接添加，不修改、不去空格
                 content_to_add = pline[len("add|") :]
                 if content_to_add not in base_lines:
                     base_lines.append(content_to_add)
@@ -94,11 +94,10 @@ def apply_patch(base_sections, patch_sections):
                 if pline not in base_lines:
                     base_lines.append(pline)
 
-        # 去掉段首尾空行
-        base_lines = [l for l in base_lines]
         base_sections[sec] = base_lines
 
     return base_sections
+
 
 
 def generate_output(sections):
