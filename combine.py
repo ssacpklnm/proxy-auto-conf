@@ -8,7 +8,9 @@ OUTPUT_FILE = "final.lcf"
 
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Host", "Proxy", "Proxy Group", "General", "Mitm"
+    "Host", "Proxy", "Proxy Group", "General", "Mitm",
+    "Remote Proxy", "Remote Filter", "Remote Script",
+    "Proxy Chain"
 ]
 
 HEADERS = {
@@ -17,38 +19,46 @@ HEADERS = {
     "Accept-Language": "zh-CN,zh;q=0.9",
 }
 
+# ---------- Utils ----------
+
 def read_base_url():
-    """Read base URL from base_config.txt"""
-    try:
-        with open(BASE_URL_FILE, "r", encoding="utf-8") as f:
-            url = f.read().strip()
-            if not url:
-                raise ValueError("base_config.txt is empty")
-            return url
-    except FileNotFoundError:
-        raise FileNotFoundError(f"{BASE_URL_FILE} not found")
+    with open(BASE_URL_FILE, "r", encoding="utf-8") as f:
+        url = f.read().strip()
+        if not url:
+            raise ValueError("base_config.txt is empty")
+        return url
 
 def download_base(url):
-    """Download base configuration content"""
-    resp = requests.get(url, headers=HEADERS)
+    resp = requests.get(url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
     return resp.text
 
+# ---------- Parse ----------
+
 def parse_sections(content):
-    """Parse all [Section] blocks into an ordered dict"""
+    """
+    Parse config into sections.
+    Preserve all lines before first [Section] as __HEADER__
+    """
     sections = {}
+    header = []
     current = None
     lines = []
 
     for line in content.splitlines():
         m = re.match(r"^\[(.+?)\]\s*$", line)
         if m:
-            if current:
+            if current is None:
+                sections["__HEADER__"] = header
+            else:
                 sections[current] = lines
+
             current = m.group(1).strip()
             lines = []
         else:
-            if current:
+            if current is None:
+                header.append(line)
+            else:
                 lines.append(line)
 
     if current:
@@ -56,62 +66,68 @@ def parse_sections(content):
 
     return sections
 
+# ---------- Merge ----------
+
 def merge_sections(base, patch):
-    """Merge patch sections into base with deduplication and remove extra empty lines"""
+    """
+    Merge patch sections into base sections.
+    - Only handle VALID_SECTIONS
+    - Remove duplicate lines
+    - No extra empty lines
+    """
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
             continue
 
-        # 去掉 patch 段首尾空行
-        patch_lines_clean = [l for l in patch_lines if l.strip() != ""]
-        # 去掉 base 段首尾空行
-        base_lines_clean = base.get(sec, [])
-        base_lines_clean = [l for l in base_lines_clean if l.strip() != ""]
+        base_lines = base.get(sec, [])
 
-        # 合并去重
-        merged = list(dict.fromkeys(base_lines_clean + patch_lines_clean))
+        base_clean = [l for l in base_lines if l.strip()]
+        patch_clean = [l for l in patch_lines if l.strip()]
+
+        merged = list(dict.fromkeys(base_clean + patch_clean))
         base[sec] = merged
 
     return base
 
+# ---------- Output ----------
+
 def generate_output(sections):
-    """Rebuild configuration content without extra empty lines"""
     out = []
+
+    # Header (comments before first section)
+    header = sections.pop("__HEADER__", [])
+    if header:
+        out.extend(header)
+        out.append("")
+
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
-        # 去掉段内空行
-        cleaned_lines = [l for l in lines if l.strip() != ""]
-        out.extend(cleaned_lines)
-        out.append("")  # 段落间保留一个空行
+        out.extend(lines)
+        out.append("")
+
     return "\n".join(out).rstrip() + "\n"
 
+# ---------- Main ----------
+
 def main():
-    # 1. Read base URL
     url = read_base_url()
     print(f"Downloading base config from: {url}")
 
-    # 2. Download base config
     base_content = download_base(url)
 
-    # 3. Read patch
     with open(PATCH_FILE, "r", encoding="utf-8") as f:
         patch_content = f.read()
 
-    # 4. Parse sections
     base_sections = parse_sections(base_content)
     patch_sections = parse_sections(patch_content)
 
-    # 5. Merge sections (方案B)
     merged_sections = merge_sections(base_sections, patch_sections)
-
-    # 6. Generate output
     final_content = generate_output(merged_sections)
 
-    # 7. Write final.conf
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
 
-    print(f"Generated {OUTPUT_FILE} successfully!")
+    print(f"✅ Generated {OUTPUT_FILE} successfully")
 
 if __name__ == "__main__":
     main()
