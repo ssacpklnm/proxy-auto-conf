@@ -223,5 +223,4 @@ https://whatshub.top/plugin/adultraplus.plugin
 https://kelee.one/Tool/Loon/Lpx/MangoTV_remove_ads.lpx
 
 [MITM]
-hostname = 
 skip-server-cert-verify = false
