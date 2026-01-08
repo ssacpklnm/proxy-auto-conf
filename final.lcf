@@ -50,9 +50,14 @@ skip-proxy = 192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,e.crashly
 # 绕过路由
 bypass-tun = 10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.0.0.0/24,192.0.2.0/24,192.88.99.0/24,192.168.0.0/16,198.51.100.0/24,203.0.113.0/24,224.0.0.0/4,255.255.255.255/32
 
+
 [Proxy]
 
+
+
 [Remote Proxy]
+
+
 
 [Remote Filter]
 Sub-ALL = NameRegex, FilterKey = "^(?=.*(.))(?!.*((?i)群|邀请|返利|循环|官网|客服|网站|网址|获取|订阅|流量|总计|到期|机场|下次|重置|重新|设置|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|频道|无法|说明|使用|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|福利|好友|失联|(\b(USE|USED|TOTAL|EXPIRE|EMAIL|Panel|Channel|Author|Traffic)(\d+)?\b|(\d{4}-\d{2}-\d{2}|\dG)))).*$"
@@ -93,10 +98,12 @@ Instagram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United Sta
 X = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Twitter-02.png
 Telegram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Telegram-01.png
 Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
-Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
-Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
+Netflix = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Netflix-02.png
+Streaming = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
 
 [Proxy Chain]
+
+
 
 [Rule]
 FINAL,手动选择
@@ -111,6 +118,7 @@ FINAL,手动选择
 # IP-CIDR6, 2000::/3, DIRECT
 # 请勿在此添加GEOIP, cn, DIRECT
 # 请勿修改CN REGION规则的排序甚至删除
+
 
 [Remote Rule]
 https://loon.103516.xyz/Rule/PCDN.lsr, policy=REJECT, tag=PCDN, enabled=true
@@ -136,13 +144,22 @@ https://rule.kelee.one/Loon/ChinaMax.lsr, policy=DIRECT, tag=ChinaMax, enabled=t
 https://kelee.one/Tool/Loon/Lsr/LAN_SPLITTER.lsr, policy=DIRECT, tag=LAN, enabled=true
 https://kelee.one/Tool/Loon/Lsr/REGION_SPLITTER.lsr, policy=DIRECT, tag=CN REGION, enabled=true
 
+
 [Host]
+
+
 
 [Rewrite]
 
+
+
 [Script]
 
+
+
 [Remote Script]
+
+
 
 [Plugin]
 https://kelee.one/Tool/Loon/Lpx/Block_HTTPDNS.lpx, pin=true, enabled=true
