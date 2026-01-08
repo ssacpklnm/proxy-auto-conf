@@ -8,7 +8,7 @@ OUTPUT_FILE = "final.lcf"
 
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Host", "Proxy", "Proxy Group", "General", "Mitm", "Remote Filter"
+    "Host", "Proxy", "Proxy Group", "General", "MITM", "Remote Filter"
 ]
 
 HEADERS = {
