@@ -6,13 +6,12 @@ BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
 OUTPUT_FILE = "final.lcf"
 
-# 支持的段落
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Remote Filter", "Host", "Proxy", "Proxy Group", "General", "Mitm"
+    "Remote Script", "Remote Filter", "Host", "Proxy", "Proxy Group",
+    "General", "Mitm", "Proxy Chain"
 ]
 
-# Loon iOS UA
 HEADERS = {
     "User-Agent": "Loon/3.2.1 (iPhone; iOS 17.0)",
     "Accept": "*/*",
@@ -45,68 +44,68 @@ def parse_sections(content):
     for line in content.splitlines():
         m = re.match(r"^\[(.+?)\]\s*$", line)
         if m:
-            if current is not None:
+            if current:
                 sections[current] = lines
             current = m.group(1).strip()
             lines = []
         else:
-            if current is not None:
+            if current:
                 lines.append(line)
-    if current is not None:
+    if current:
         sections[current] = lines
     return sections
 
-def apply_patch_line(base_lines, patch_line):
-    """Apply add/delete/modify operations"""
-    patch_line = patch_line.strip()
-    if not patch_line:
-        return base_lines
+def apply_patch_to_section(lines, patch_lines):
+    """Apply add/delete/modify operations within a section"""
+    new_lines = lines.copy()
 
-    if patch_line.startswith("add|"):
-        _, line_content = patch_line.split("|", 1)
-        # 添加到末尾，去重
-        if line_content not in base_lines:
-            base_lines.append(line_content)
-    elif patch_line.startswith("delete|"):
-        _, keyword = patch_line.split("|", 1)
-        # 模糊匹配删除
-        base_lines = [l for l in base_lines if keyword not in l]
-    elif patch_line.startswith("modify|"):
-        _, match_content, new_line = patch_line.split("|", 2)
-        # 精确匹配并替换整行
-        base_lines = [new_line if match_content in l else l for l in base_lines]
-    else:
-        # 普通行，直接添加去重
-        if patch_line not in base_lines:
-            base_lines.append(patch_line)
+    for patch_line in patch_lines:
+        patch_line = patch_line.strip()
+        if not patch_line:
+            continue
 
-    return base_lines
+        if patch_line.startswith("add|"):
+            # add|整行内容
+            content = patch_line[len("add|"):]
+            if content not in new_lines:
+                new_lines.append(content)
+
+        elif patch_line.startswith("delete|"):
+            # delete|匹配字符串
+            content = patch_line[len("delete|"):]
+            new_lines = [l for l in new_lines if content not in l]
+
+        elif patch_line.startswith("modify|"):
+            # modify|匹配字符串|整行新内容
+            parts = patch_line.split("|", 2)
+            if len(parts) < 3:
+                continue
+            match_str = parts[1]
+            new_line = parts[2]
+            for i, line in enumerate(new_lines):
+                if match_str in line:
+                    new_lines[i] = new_line
+                    break  # 只替换第一次匹配到的行
+    return new_lines
 
 def merge_sections(base, patch):
     """Merge patch sections into base with deduplication"""
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
             continue
-
         base_lines = base.get(sec, [])
-
-        for pline in patch_lines:
-            base_lines = apply_patch_line(base_lines, pline)
-
-        # 去掉段首尾空行
-        base_lines = [l for l in base_lines if l.strip() != ""]
-        base[sec] = base_lines
-
+        merged_lines = apply_patch_to_section(base_lines, patch_lines)
+        # 去掉首尾空行
+        merged_lines = [l for l in merged_lines if l.strip() != ""]
+        base[sec] = merged_lines
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content without extra empty lines"""
+    """Rebuild configuration content"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
-        # 保留注释和内容，段内去掉空行
-        cleaned_lines = [l for l in lines if l.strip() != ""]
-        out.extend(cleaned_lines)
+        out.extend(lines)
         out.append("")  # 段落间保留一个空行
     return "\n".join(out).rstrip() + "\n"
 
