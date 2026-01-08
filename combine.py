@@ -11,6 +11,12 @@ VALID_SECTIONS = [
     "Host", "Proxy", "Proxy Group", "General", "Mitm"
 ]
 
+HEADERS = {
+    "User-Agent": "Loon/3.2.1 (iPhone; iOS 17.0)",
+    "Accept": "*/*",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+}
+
 def read_base_url():
     """Read base URL from base_config.txt"""
     try:
@@ -24,7 +30,7 @@ def read_base_url():
 
 def download_base(url):
     """Download base configuration content"""
-    resp = requests.get(url)
+    resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     return resp.text
 
