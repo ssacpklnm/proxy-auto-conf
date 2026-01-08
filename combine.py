@@ -32,10 +32,11 @@ def download_base(url):
     return resp.text
 
 def parse_sections(content):
-    """Parse all [Section] blocks into an ordered dict with lines"""
+    """Parse sections and capture leading comments"""
     sections = {}
     current = None
     lines = []
+    leading_comments = []
 
     for line in content.splitlines():
         m = re.match(r"^\[(.+?)\]\s*$", line)
@@ -47,9 +48,12 @@ def parse_sections(content):
         else:
             if current:
                 lines.append(line)
+            else:
+                # 在第一个 [Section] 之前的注释或空行
+                leading_comments.append(line)
     if current:
         sections[current] = lines
-    return sections
+    return leading_comments, sections
 
 def apply_patch(base, patch):
     """Apply add/delete/modify operations from patch to base"""
@@ -62,7 +66,6 @@ def apply_patch(base, patch):
         for line in patch_lines:
             if line.startswith("add|"):
                 _, content = line.split("|", 1)
-                # 直接追加，不空行
                 if content not in new_lines:
                     new_lines.append(content)
             elif line.startswith("delete|"):
@@ -73,7 +76,6 @@ def apply_patch(base, patch):
                     _, match_content, new_content = line.split("|", 2)
                 except ValueError:
                     continue
-                # 精确匹配行开头或整行包含 match_content
                 for idx, l in enumerate(new_lines):
                     if l.startswith(match_content) or l == match_content:
                         new_lines[idx] = new_content
@@ -82,9 +84,15 @@ def apply_patch(base, patch):
         base[sec] = new_lines
     return base
 
-def generate_output(sections):
-    """Rebuild configuration content preserving comments and sections"""
+def generate_output(leading_comments, sections):
+    """Rebuild configuration content preserving leading comments"""
     out = []
+    # 文件开头注释
+    for line in leading_comments:
+        out.append(line)
+    if leading_comments:
+        out.append("")  # 注释和第一个 section 之间空一行
+
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
         for l in lines:
@@ -100,11 +108,11 @@ def main():
     with open(PATCH_FILE, "r", encoding="utf-8") as f:
         patch_content = f.read()
 
-    base_sections = parse_sections(base_content)
-    patch_sections = parse_sections(patch_content)
+    base_leading, base_sections = parse_sections(base_content)
+    _, patch_sections = parse_sections(patch_content)
 
     merged_sections = apply_patch(base_sections, patch_sections)
-    final_content = generate_output(merged_sections)
+    final_content = generate_output(base_leading, merged_sections)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
