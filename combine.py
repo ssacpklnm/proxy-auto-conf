@@ -6,7 +6,6 @@ BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
 OUTPUT_FILE = "final.lcf"
 
-# 段名白名单
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
     "Host", "Proxy", "Proxy Group", "General", "Mitm", "Remote Filter"
@@ -19,7 +18,6 @@ HEADERS = {
 }
 
 def read_base_url():
-    """Read base URL from base_config.txt"""
     try:
         with open(BASE_URL_FILE, "r", encoding="utf-8") as f:
             url = f.read().strip()
@@ -30,13 +28,11 @@ def read_base_url():
         raise FileNotFoundError(f"{BASE_URL_FILE} not found")
 
 def download_base(url):
-    """Download base configuration content"""
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     return resp.text
 
 def parse_sections(content):
-    """Parse all [Section] blocks into an ordered dict"""
     sections = {}
     current = None
     lines = []
@@ -58,7 +54,6 @@ def parse_sections(content):
     return sections
 
 def apply_patch_to_section(lines, patch_lines):
-    """Apply add/delete/modify operations within a section"""
     new_lines = lines.copy()
 
     for patch_line in patch_lines:
@@ -67,74 +62,65 @@ def apply_patch_to_section(lines, patch_lines):
             continue
 
         if patch_line.startswith("add|"):
-            # add|整行内容
             content = patch_line[len("add|"):]
             if content not in new_lines:
                 new_lines.append(content)
 
         elif patch_line.startswith("delete|"):
-            # delete|匹配字符串
             content = patch_line[len("delete|"):]
             new_lines = [l for l in new_lines if content not in l]
 
         elif patch_line.startswith("modify|"):
-            # modify|匹配字符串|整行新内容
             parts = patch_line.split("|", 2)
             if len(parts) < 3:
                 continue
             match_str = parts[1]
             new_line = parts[2]
-            # 替换段内所有匹配行
-            new_lines = [new_line if match_str in l else l for l in new_lines]
 
-    # 去掉段内首尾空行
+            # 先删除段内所有匹配行
+            new_lines = [l for l in new_lines if match_str not in l]
+
+            # 然后只添加一次新行
+            if new_line not in new_lines:
+                new_lines.append(new_line)
+
+    # 去掉首尾空行
     new_lines = [l for l in new_lines if l.strip() != ""]
     return new_lines
 
 def merge_sections(base, patch):
-    """Merge patch sections into base with deduplication"""
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
             continue
-
         base_lines = base.get(sec, [])
         merged_lines = apply_patch_to_section(base_lines, patch_lines)
         base[sec] = merged_lines
-
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content with one empty line between sections"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
         out.extend(lines)
-        out.append("")  # 段落间保留一个空行
+        out.append("")  # 段间空行
     return "\n".join(out).rstrip() + "\n"
 
 def main():
-    # 1. Read base URL
     url = read_base_url()
     print(f"Downloading base config from: {url}")
 
-    # 2. Download base config
     base_content = download_base(url)
 
-    # 3. Read patch
     with open(PATCH_FILE, "r", encoding="utf-8") as f:
         patch_content = f.read()
 
-    # 4. Parse sections
     base_sections = parse_sections(base_content)
     patch_sections = parse_sections(patch_content)
 
-    # 5. Merge sections
     merged_sections = merge_sections(base_sections, patch_sections)
 
-    # 6. Generate output
     final_content = generate_output(merged_sections)
 
-    # 7. Write final.lcf
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
 
