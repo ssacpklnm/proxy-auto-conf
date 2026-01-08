@@ -6,10 +6,10 @@ BASE_URL_FILE = "base_config.txt"
 PATCH_FILE = "patch.conf"
 OUTPUT_FILE = "final.lcf"
 
+# 段名白名单
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Remote Script", "Remote Filter", "Host", "Proxy", "Proxy Group",
-    "General", "Mitm", "Proxy Chain"
+    "Host", "Proxy", "Proxy Group", "General", "Mitm", "Remote Filter"
 ]
 
 HEADERS = {
@@ -51,8 +51,10 @@ def parse_sections(content):
         else:
             if current:
                 lines.append(line)
+
     if current:
         sections[current] = lines
+
     return sections
 
 def apply_patch_to_section(lines, patch_lines):
@@ -82,10 +84,11 @@ def apply_patch_to_section(lines, patch_lines):
                 continue
             match_str = parts[1]
             new_line = parts[2]
-            for i, line in enumerate(new_lines):
-                if match_str in line:
-                    new_lines[i] = new_line
-                    break  # 只替换第一次匹配到的行
+            # 替换段内所有匹配行
+            new_lines = [new_line if match_str in l else l for l in new_lines]
+
+    # 去掉段内首尾空行
+    new_lines = [l for l in new_lines if l.strip() != ""]
     return new_lines
 
 def merge_sections(base, patch):
@@ -93,15 +96,15 @@ def merge_sections(base, patch):
     for sec, patch_lines in patch.items():
         if sec not in VALID_SECTIONS:
             continue
+
         base_lines = base.get(sec, [])
         merged_lines = apply_patch_to_section(base_lines, patch_lines)
-        # 去掉首尾空行
-        merged_lines = [l for l in merged_lines if l.strip() != ""]
         base[sec] = merged_lines
+
     return base
 
 def generate_output(sections):
-    """Rebuild configuration content"""
+    """Rebuild configuration content with one empty line between sections"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
@@ -131,7 +134,7 @@ def main():
     # 6. Generate output
     final_content = generate_output(merged_sections)
 
-    # 7. Write final.conf
+    # 7. Write final.lcf
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_content)
 
