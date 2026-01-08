@@ -98,8 +98,8 @@ Instagram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United Sta
 X = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Twitter-02.png
 Telegram = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Telegram-01.png
 Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
-Netflix = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Netflix-02.png
-Streaming = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
+Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
+Streaming = url-test,Sub-Streaming,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
 
 [Proxy Chain]
 
