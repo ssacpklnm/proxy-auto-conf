@@ -8,7 +8,7 @@ OUTPUT_FILE = "final.lcf"
 
 VALID_SECTIONS = [
     "Plugin", "Rewrite", "Script", "Rule", "Remote Rule",
-    "Host", "Proxy", "Proxy Group", "General", "Mitm"
+    "Remote Filter", "Host", "Proxy", "Proxy Group", "General", "Mitm"
 ]
 
 HEADERS = {
@@ -16,7 +16,6 @@ HEADERS = {
     "Accept": "*/*",
     "Accept-Language": "zh-CN,zh;q=0.9",
 }
-
 
 def read_base_url():
     """Read base URL from base_config.txt"""
@@ -29,13 +28,33 @@ def read_base_url():
     except FileNotFoundError:
         raise FileNotFoundError(f"{BASE_URL_FILE} not found")
 
-
 def download_base(url):
     """Download base configuration content"""
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     return resp.text
 
+def parse_sections(content):
+    """Parse all [Section] blocks into an ordered dict"""
+    sections = {}
+    current = None
+    lines = []
+
+    for line in content.splitlines():
+        m = re.match(r"^\[(.+?)\]\s*$", line)
+        if m:
+            if current is not None:
+                sections[current] = lines
+            current = m.group(1).strip()
+            lines = []
+        else:
+            if current is not None:
+                lines.append(line)
+
+    if current:
+        sections[current] = lines
+
+    return sections
 
 def merge_sections(base, patch):
     """Merge patch sections into base with add/delete/modify"""
@@ -44,7 +63,7 @@ def merge_sections(base, patch):
             continue
 
         if sec not in base:
-            base[sec] = []  # 初始化空段落
+            base[sec] = []
 
         base_lines = base[sec]
 
@@ -72,57 +91,14 @@ def merge_sections(base, patch):
 
     return base
 
-
-
-def apply_patch(base_sections, patch_sections):
-    """Apply add/delete/modify patch rules to base_sections"""
-    for sec, patch_lines in patch_sections.items():
-        if sec not in VALID_SECTIONS:
-            continue
-        base_lines = base_sections.get(sec, [])
-
-        for pline in patch_lines:
-            pline = pline.rstrip("\n")  # 保留开头空格
-            if not pline or pline.startswith("#"):
-                continue
-
-            if pline.startswith("add|"):
-                # 直接添加，不修改、不去空格
-                content_to_add = pline[len("add|") :]
-                if content_to_add not in base_lines:
-                    base_lines.append(content_to_add)
-            elif pline.startswith("delete|"):
-                key = pline[len("delete|") :]
-                # 模糊匹配删除包含 key 的行
-                base_lines = [l for l in base_lines if key not in l]
-            elif pline.startswith("modify|"):
-                # 格式: modify|匹配标识|整行新内容
-                parts = pline.split("|", 2)
-                if len(parts) == 3:
-                    match_key, new_line = parts[1], parts[2]
-                    for i, l in enumerate(base_lines):
-                        if match_key in l:
-                            base_lines[i] = new_line
-            else:
-                # 如果没有前缀，默认追加
-                if pline not in base_lines:
-                    base_lines.append(pline)
-
-        base_sections[sec] = base_lines
-
-    return base_sections
-
-
-
 def generate_output(sections):
-    """Rebuild configuration content preserving comments and spacing"""
+    """Rebuild configuration content, preserving comments"""
     out = []
     for sec, lines in sections.items():
         out.append(f"[{sec}]")
         out.extend(lines)
         out.append("")  # 段落间保留一个空行
     return "\n".join(out).rstrip() + "\n"
-
 
 def main():
     # 1. Read base URL
@@ -140,8 +116,8 @@ def main():
     base_sections = parse_sections(base_content)
     patch_sections = parse_sections(patch_content)
 
-    # 5. Apply patch rules
-    merged_sections = apply_patch(base_sections, patch_sections)
+    # 5. Merge sections (支持 add/delete/modify)
+    merged_sections = merge_sections(base_sections, patch_sections)
 
     # 6. Generate output
     final_content = generate_output(merged_sections)
@@ -151,7 +127,6 @@ def main():
         f.write(final_content)
 
     print(f"Generated {OUTPUT_FILE} successfully!")
-
 
 if __name__ == "__main__":
     main()
