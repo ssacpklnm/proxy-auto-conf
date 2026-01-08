@@ -37,27 +37,41 @@ def download_base(url):
     return resp.text
 
 
-def parse_sections(content):
-    """Parse all [Section] blocks into an ordered dict"""
-    sections = {}
-    current = None
-    lines = []
+def merge_sections(base, patch):
+    """Merge patch sections into base with add/delete/modify"""
+    for sec, patch_lines in patch.items():
+        if sec not in VALID_SECTIONS:
+            continue
 
-    for line in content.splitlines():
-        m = re.match(r"^\[(.+?)\]\s*$", line)
-        if m:
-            if current:
-                sections[current] = lines
-            current = m.group(1).strip()
-            lines = []
-        else:
-            if current:
-                lines.append(line)
+        if sec not in base:
+            base[sec] = []  # 初始化空段落
 
-    if current:
-        sections[current] = lines
+        base_lines = base[sec]
 
-    return sections
+        for pline in patch_lines:
+            pline = pline.rstrip("\n")
+            if not pline or pline.startswith("#"):
+                continue
+
+            if pline.startswith("add|"):
+                content_to_add = pline[len("add|") :]
+                if content_to_add not in base_lines:
+                    base_lines.append(content_to_add)
+            elif pline.startswith("delete|"):
+                key = pline[len("delete|") :]
+                base_lines = [l for l in base_lines if key not in l]
+            elif pline.startswith("modify|"):
+                parts = pline.split("|", 2)
+                if len(parts) == 3:
+                    match_key, new_line = parts[1], parts[2]
+                    for i, l in enumerate(base_lines):
+                        if match_key in l:
+                            base_lines[i] = new_line
+
+        base[sec] = base_lines
+
+    return base
+
 
 
 def apply_patch(base_sections, patch_sections):
