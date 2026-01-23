@@ -91,9 +91,6 @@ Sub-Streaming = NameRegex, FilterKey = "^(?=.*((?i)流媒体|Stream))(?!.*((?i)�
 
 [Proxy Group]
 手动选择 = select,DIRECT,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,Rare Areas,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/Select.png
-时延优选 = url-test,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/UrlTest.png
-故障转移 = fallback,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,max-timeout = 2000,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/Fallback.png
-负载均衡 = load-balance,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,interval = 60,max-timeout = 2000,algorithm = pcc,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Other/LoadBalance.png
 Global = select,Sub-ALL,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/WorldMap.png
 Hong Kong = url-test,Sub-HK,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/HongKong.png
 Macao = url-test,Sub-MO,interval = 60,tolerance = 50,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag/Macao.png
