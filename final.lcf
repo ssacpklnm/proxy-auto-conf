@@ -107,7 +107,7 @@ GitHub = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United
 Microsoft = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Microsoft.png
 Google = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Google.png
 Instagram = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Instagram-02.png
-X = select,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Twitter-02.png
+X = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Twitter-02.png
 Telegram = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Telegram-01.png
 YouTube = select,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/YouTube.png
 Netflix = select,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Netflix-02.png
