@@ -1,1 +1,1 @@
-https://loon.103516.xyz/Config/Loon_RawConfig.lcf
+https://raw.githubusercontent.com/sooyaaabo/LoonLab/main/Config/Loon_RawConfig.lcf
