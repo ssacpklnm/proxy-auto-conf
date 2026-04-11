@@ -111,7 +111,7 @@ X = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United Stat
 Telegram = select,Global,Hong Kong,Macao,Taiwan,Japan,South Korea,Singapore,United States,United Kingdom,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Telegram-01.png
 YouTube = select,Global,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/YouTube.png
 Netflix = select,Global,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Netflix-02.png
-Streaming = select,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
+Streaming = select,Global,Sub-Streaming,img-url = https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App/Conflux.png
 
 [Proxy Chain]
 
