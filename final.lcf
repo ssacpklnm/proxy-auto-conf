@@ -129,10 +129,6 @@ FINAL,故障转移
 
 
 [Remote Rule]
-https://loon.103516.xyz/Rule/PCDN.lsr, policy=REJECT, tag=PCDN, enabled=true
-https://loon.103516.xyz/Rule/AWAvenueAdsRule.lsr, policy=REJECT, tag=AWAvenueAdsRule, enabled=true
-https://loon.103516.xyz/Rule/RejectAd.lsr, policy=REJECT, tag=RejectAd, enabled=true
-https://loon.103516.xyz/Rule/AdRules.lsr, policy=REJECT, tag=AdRules, enabled=true
 https://rule.kelee.one/Loon/WeChat.lsr, policy=DIRECT, tag=WeChat, enabled=true
 https://loon.103516.xyz/Rule/Apple.lsr, policy=Apple, tag=Apple, enabled=true
 https://loon.103516.xyz/Rule/AI.lsr, policy=AI, tag=AI, enabled=true
