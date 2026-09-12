@@ -114,7 +114,7 @@ YouTube = select,Global,Sub-Streaming,img-url = https://raw.githubusercontent.co
 
 
 [Rule]
-FINAL,故障转移
+FINAL,Global
 # Local Rule
 # Type:DOMAIN-SUFFIX,DOMAIN,DOMAIN-KEYWORD,USER-AGENT,URL-REGEX,IP-CIDR,IP-CIDR6,IP-ASN
 # Strategy:DIRECT,Proxy,REJECT
@@ -126,7 +126,6 @@ FINAL,故障转移
 # IP-CIDR6, 2000::/3, DIRECT
 # 请勿在此添加GEOIP, cn, DIRECT
 # 请勿修改CN REGION规则的排序甚至删除
-
 
 [Remote Rule]
 https://rule.kelee.one/Loon/WeChat.lsr, policy=DIRECT, tag=WeChat, enabled=true
