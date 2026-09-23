@@ -1,15 +1,14 @@
-# Loon 配置文件
+# Loon for iOS 配置文件
 # 描述：个人使用的 Loon 配置文件，可根据实际需求进行调整。
-# 日期: 2026-06-30 00:00
+# 日期: 2026-09-23 00:00
 # 作者: sooyaaabo（恩秀）
-# 版本: 3.5.0(975)
+# 版本: 3.5.1(998)
 # 主页: https://github.com/sooyaaabo/LoonLab/blob/main/README.md
 # 插件: https://loonlab.103516.xyz/Plugin/
 # App图标库: https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/App-Icon.json
 # Flag图标库: https://raw.githubusercontent.com/sooyaaabo/IconLibrary/main/Flag-Icon.json
 # Loon官方文档: https://nsloon.app/docs/intro
 # Loon官方教程: https://coffee-elderberry-22b.notion.site/Loon-71747252d5054551a8cd10924064899c
-# Loon第三方知识库：https://getupnote.com/share/notes/zSn1ShBmzNYISKcTgjXE5oHMrNf2/b6047d8b-621c-44af-bfa6-a28d35bcf928
 # 参考链接: https://kelee.one/Tool/Loon/Lcf/zh-CN/Loon_Auto_Select_Config_By_iKeLee.lcf
 
 
@@ -128,6 +127,7 @@ FINAL,Global
 # 请勿修改CN REGION规则的排序甚至删除
 
 [Remote Rule]
+https://loon.103516.xyz/Rule/BlockAds.lsr, policy=REJECT, tag=BlockAds, enabled=true
 https://rule.kelee.one/Loon/WeChat.lsr, policy=DIRECT, tag=WeChat, enabled=true
 https://loon.103516.xyz/Rule/Apple.lsr, policy=Apple, tag=Apple, enabled=true
 https://loon.103516.xyz/Rule/AI.lsr, policy=AI, tag=AI, enabled=true
@@ -173,7 +173,7 @@ https://loon.103516.xyz/Plugin/Script-Hub.lpx, policy=Global, enabled=true
 https://loon.103516.xyz/Plugin/BoxJs.lpx, policy=Global, enabled=true
 https://loon.103516.xyz/Plugin/WebPage.lpx
 https://loon.103516.xyz/Plugin/BlockAds.lpx
-https://loon.103516.xyz/Plugin/Bilibili.lpx
+https://kelee.one/Tool/Loon/Lpx/Bilibili_remove_ads.lpx
 https://kelee.one/Tool/Loon/Lpx/12306_remove_ads.lpx
 https://kelee.one/Tool/Loon/Lpx/AppleWeatherEnhancer.lpx
 https://kelee.one/Tool/Loon/Lpx/Google.lpx
