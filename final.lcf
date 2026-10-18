@@ -136,11 +136,10 @@ https://rule.kelee.one/Loon/Microsoft.lsr, policy=Microsoft, tag=Microsoft, enab
 https://rule.kelee.one/Loon/Instagram.lsr, policy=Instagram, tag=Instagram, enabled=true
 https://rule.kelee.one/Loon/Twitter.lsr, policy=X, tag=X, enabled=true
 https://rule.kelee.one/Loon/YouTube.lsr, policy=YouTube, tag=YouTube, enabled=true
-https://rule.kelee.one/Loon/Global.lsr, policy=United States, tag=Global, enabled=true
+https://rule.kelee.one/Loon/Global.lsr, policy=Global, tag=Global, enabled=true
 https://rule.kelee.one/Loon/ChinaMax.lsr, policy=DIRECT, tag=ChinaMax, enabled=true
 https://kelee.one/Tool/Loon/Lsr/LAN_SPLITTER.lsr, policy=DIRECT, tag=LAN, enabled=true
 https://kelee.one/Tool/Loon/Lsr/REGION_SPLITTER.lsr, policy=DIRECT, tag=CN REGION, enabled=true
-
 
 [Host]
 iosapps.itunes.apple.com = iosapps.itunes.apple.com.download.ks-cdn.com
