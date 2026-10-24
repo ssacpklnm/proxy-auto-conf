@@ -109,7 +109,7 @@ YouTube = select,Global,Hong Kong,Taiwan,Japan,South Korea,Singapore,United Stat
 
 
 [Rule]
-FINAL,DIRECT
+FINAL,Global
 # Local Rule
 # Type:DOMAIN-SUFFIX,DOMAIN,DOMAIN-KEYWORD,USER-AGENT,URL-REGEX,IP-CIDR,IP-CIDR6,IP-ASN
 # Strategy:DIRECT,Proxy,REJECT
