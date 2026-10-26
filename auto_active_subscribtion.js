@@ -34,8 +34,8 @@ async function operator(proxies = [], targetPlatform, context) {
 
   // 1. 读取参数（支持 Sub-Store $arguments 传参，未传时使用抓包提取的默认值）
   const api = String(args.api || 'https://api-flowercloud.com').replace(/\/+$/, '');
-  const user = args.user || args.username || 'zyx1069958401@gmail.com';
-  const password = args.password || 'as159753';
+  const user = args.user || args.username || '';
+  const password = args.password || '';
   const serviceId = String(args.serviceId || args.id || '318178');
   const ua =
     args.ua ||
