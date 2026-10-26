@@ -3,29 +3,23 @@
  *
  * 参考模板：https://raw.githubusercontent.com/xream/scripts/main/surge/modules/sub-store-scripts/sub-info/autoLogin.js
  *
- * ==================== Sub-Store 配置说明 ====================
- * 在 Sub-Store ->「单条订阅」->「脚本操作 (Script Operator)」中添加本脚本。
+ * ==================== 为什么之前日志里没有任何输出？（必看排错指南） ====================
+ * 1. 【单条订阅“本地”内容不能完全留空】：
+ *    在 Sub-Store 中，如果单条订阅设为「本地 (Local)」且内容为空，或者「远程」拉取失败返回 0 个节点，
+ *    Sub-Store 引擎会认为没有节点需要处理，从而【直接跳过后面所有的脚本操作 (`operator`)】！
+ *    👉 解决办法：
+ *       - 如果你选「本地 (Local)」，请在订阅内容框里随便填一行占位节点，例如：
+ *         `placeholder = direct` 或 `ss://YWVzLTI1Ni1nY206dGVzdA==@127.0.0.1:8888#Placeholder`
+ *       - 如果你选「远程 (Remote)」并填入了你现成的订阅链接，请把本脚本加在「脚本操作」第一位；
+ *         若开关关闭时远程订阅拉取报错导致不进脚本，请改用「本地 + 一行占位节点 `placeholder = direct`」，并把你的现成订阅链接填到下面的 `subUrl` 参数中。
  *
- * 方式 A（推荐，最省事）：【仅登录开启开关 + 由本脚本拉取现成订阅链接】
- *   1. 单条订阅「来源」选择「本地 (Local)」，内容留空（避免 Sub-Store 在脚本运行前请求未开启的订阅而报错）。
- *   2. 在下方脚本参数 ($arguments) 或脚本默认值中配置 `subUrl`（你的现成订阅链接）。
- *   3. 脚本会自动完成：[1] 获取 CSRF Token -> [2] 登录 WHMCS -> [3] 开启订阅开关 (ActivateSublink) -> [4] 拉取 `subUrl` 节点并写入流量信息。
+ * 2. 【Docker / Node.js 版 Sub-Store (v2.38.0+) 安全限制】：
+ *    自 Sub-Store v2.38.0 起，如果部署 Docker/Node 时未设置环境变量 `SUB_STORE_FRONTEND_BACKEND_PATH`，
+ *    后端会默认【静默禁用所有 Script Operator 脚本操作】！
+ *    👉 解决办法：确认启动容器时配置了 `-e SUB_STORE_FRONTEND_BACKEND_PATH=/你的安全路径`（或 `/ `）。
  *
- * 方式 B：【仅执行登录与开启订阅开关，不拉取订阅（纯前置触发器）】
- *   1. 如果你已经在其他地方配置了订阅链接，或者只需要触发开关，不传 `subUrl`（或将 `fetchSub` 设为 `false`）。
- *   2. 脚本执行完第 [3] 步开启订阅开关后，直接原样返回当前 `proxies` 列表。
- *
- * ==================== 支持的脚本参数 ($arguments) ====================
- * 可在 Sub-Store 脚本参数面板中添加，或直接在脚本链接后拼接 `#user=xxx&password=xxx`：
- * - api          : 机场面板地址（默认: https://api-flowercloud.com）
- * - user         : 登录邮箱（已预填抓包账号，支持外部覆盖）
- * - password     : 登录密码（已预填抓包密码，支持外部覆盖）
- * - serviceId    : 套餐产品 ID（默认: 318178）
- * - ua           : 登录与操作面板时的浏览器 UA（需与抓包获取 cf_clearance 时一致）
- * - cf_clearance : 可选，若触发 Cloudflare 403 拦截，填入抓包中的 cf_clearance Cookie 值
- * - subUrl       : 可选，你现成的机场订阅链接（填写后将在开启开关后自动拉取节点与流量信息）
- * - subUA        : 可选，拉取订阅链接时的 UA（默认: clash.meta）
- * - timeout      : 可选，请求超时时间（默认: 15000 毫秒）
+ * 3. 【脚本类型选错】：
+ *    请确认添加的是「脚本操作 (Script Operator)」，而不是「脚本过滤器 (Script Filter)」。
  */
 
 async function operator(proxies = [], targetPlatform, context) {
@@ -33,7 +27,19 @@ async function operator(proxies = [], targetPlatform, context) {
   const SUBS_KEY = 'subs';
   const args = typeof $arguments !== 'undefined' && $arguments ? $arguments : {};
 
-  // 1. 读取参数（支持 $arguments 传参，未传时使用抓包提取的默认值）
+  // 双通道日志（同时输出到 Sub-Store 日志面板 $.info 与 Node/客户端控制台 console.log）
+  const logInfo = (msg) => {
+    console.log(msg);
+    if ($ && typeof $.info === 'function') $.info(msg);
+  };
+  const logError = (msg) => {
+    console.error(msg);
+    if ($ && typeof $.error === 'function') $.error(msg);
+  };
+
+  logInfo(`🚀 [FlowerCloud] 开始执行自动登录并开启订阅开关脚本... (当前传入节点数: ${proxies.length})`);
+
+  // 1. 读取参数（支持 Sub-Store $arguments 传参，未传时使用抓包提取的默认值）
   const api = String(args.api || 'https://api-flowercloud.com').replace(/\/+$/, '');
   const user = args.user || args.username || 'zyx1069958401@gmail.com';
   const password = args.password || 'as159753';
@@ -42,6 +48,7 @@ async function operator(proxies = [], targetPlatform, context) {
     args.ua ||
     'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Mobile/15E148 Safari/604.1';
   const cfClearance = args.cf_clearance || args.cfClearance || '';
+  // 如果你有现成的订阅链接，既可以通过参数 subUrl 传入，也可以直接填在下方引号里：
   const subUrl = args.subUrl || args.sub_url || '';
   const subUA = args.subUA || args.sub_ua || 'clash.meta';
   const timeout = Number(args.timeout) || 15000;
@@ -58,7 +65,6 @@ async function operator(proxies = [], targetPlatform, context) {
       headers['set-cookie'] || headers['Set-Cookie'] || headers['SET-COOKIE'];
     if (!rawSetCookie) return;
 
-    // 兼容数组或换行/逗号分隔的多条 Set-Cookie（排除 expires=Thu, 01-Jan... 中的逗号）
     const cookieList = Array.isArray(rawSetCookie)
       ? rawSetCookie
       : String(rawSetCookie).split(/,(?=\s*[A-Za-z0-9_\-%]+=)/);
@@ -93,7 +99,7 @@ async function operator(proxies = [], targetPlatform, context) {
   try {
     // ==================== Step 1: 访问登录页获取 CSRF Token 与初始 Cookie ====================
     const clientareaUrl = `${api}/clientarea.php`;
-    $.info(`[FlowerCloud] [1/3] 请求登录页获取 CSRF Token: ${clientareaUrl}`);
+    logInfo(`[FlowerCloud] [1/3] 请求登录页获取 CSRF Token: ${clientareaUrl}`);
 
     const pageRes = await $.http.get({
       url: clientareaUrl,
@@ -108,7 +114,7 @@ async function operator(proxies = [], targetPlatform, context) {
     updateCookies(pageRes.headers);
 
     if (pageStatus === 403) {
-      $.error(
+      logError(
         `[FlowerCloud] 触发 Cloudflare 403 拦截！请在脚本参数中配置有效的 cf_clearance 与匹配的 ua`
       );
       return proxies;
@@ -120,25 +126,24 @@ async function operator(proxies = [], targetPlatform, context) {
       pageHtml.match(/csrfToken\s*=\s*["']([a-f0-9]{40})["']/i);
 
     if (!tokenMatch || !tokenMatch[1]) {
-      $.error(
+      logError(
         `[FlowerCloud] 未能从 clientarea.php 提取到 40 位 CSRF Token（状态码: ${pageStatus}），跳过`
       );
       return proxies;
     }
 
     const csrfToken = tokenMatch[1];
-    $.info(`[FlowerCloud] 成功提取 CSRF Token: ${csrfToken}`);
+    logInfo(`[FlowerCloud] 成功提取 CSRF Token: ${csrfToken}`);
 
     // ==================== Step 2: 提交登录表单 (POST /dologin.php) ====================
-    // 若刚才 GET /clientarea.php 已经处于登录态（页面包含 logout.php），可跳过重复 POST
     const alreadyLoggedIn =
       pageHtml.includes('logout.php') && !pageHtml.includes('dologin.php');
 
     if (alreadyLoggedIn) {
-      $.info(`[FlowerCloud] [2/3] 检测到当前 Cookie 已处于登录状态，跳过重复登录`);
+      logInfo(`[FlowerCloud] [2/3] 检测到当前 Cookie 已处于登录状态，跳过重复登录`);
     } else {
       const loginUrl = `${api}/dologin.php`;
-      $.info(`[FlowerCloud] [2/3] 提交账号密码至登录接口: ${loginUrl}`);
+      logInfo(`[FlowerCloud] [2/3] 提交账号密码至登录接口: ${loginUrl}`);
 
       const formBody = [
         `token=${encodeURIComponent(csrfToken)}`,
@@ -146,8 +151,6 @@ async function operator(proxies = [], targetPlatform, context) {
         `password=${encodeURIComponent(password)}`,
       ].join('&');
 
-      // 关键：禁止自动重定向 (followRedirect: false, auto-redirect: false)，
-      // 以便捕获 302 Found 响应头下发的新 WHMCSy551iLvnhYt7 会话 Cookie
       const loginRes = await $.http.post({
         url: loginUrl,
         headers: {
@@ -169,12 +172,12 @@ async function operator(proxies = [], targetPlatform, context) {
 
       const locationHeader =
         loginRes.headers?.location || loginRes.headers?.Location || '';
-      $.info(
+      logInfo(
         `[FlowerCloud] 登录响应状态码: ${loginStatus}, 跳转 Location: ${locationHeader}`
       );
 
       if (String(locationHeader).includes('incorrect=true')) {
-        $.error(`[FlowerCloud] 登录失败：邮箱或密码错误 (incorrect=true)`);
+        logError(`[FlowerCloud] 登录失败：邮箱或密码错误 (incorrect=true)`);
         return proxies;
       }
     }
@@ -185,7 +188,7 @@ async function operator(proxies = [], targetPlatform, context) {
     )}&V2raySocksAction=ActivateSublink&Serviceid=${encodeURIComponent(
       serviceId
     )}`;
-    $.info(`[FlowerCloud] [3/3] 正在开启订阅开关: ${activateUrl}`);
+    logInfo(`[FlowerCloud] [3/3] 正在开启订阅开关: ${activateUrl}`);
 
     const activateRes = await $.http.get({
       url: activateUrl,
@@ -203,7 +206,7 @@ async function operator(proxies = [], targetPlatform, context) {
       activateRes.statusCode || activateRes.status || 0
     );
     const activateText = String(activateRes.body || '').trim();
-    $.info(
+    logInfo(
       `[FlowerCloud] 开启订阅开关响应 (状态码 ${activateStatus}): ${activateText.slice(
         0,
         100
@@ -211,21 +214,35 @@ async function operator(proxies = [], targetPlatform, context) {
     );
 
     if (activateText === 'success') {
-      $.info(`✅ [FlowerCloud] 订阅更新开关开启成功！`);
+      logInfo(`✅ [FlowerCloud] 订阅更新开关开启成功！`);
     } else {
-      $.error(
+      logError(
         `⚠️ [FlowerCloud] 开启订阅开关返回非预期内容: ${activateText.slice(0, 120)}`
       );
     }
 
-    // ==================== (可选) Step 4: 若传入了现成 subUrl，拉取节点并写入流量信息 ====================
-    if (!subUrl) {
+    // ==================== Step 4: 拉取现成订阅链接（若配置了 subUrl 或远程订阅因开关关闭为空） ====================
+    // 如果没有显式传 subUrl，但当前订阅是远程订阅 (context.source 存在 url)，且刚才开启开关前拉取到的节点很少/仅有占位节点，
+    // 自动从当前订阅配置中读取你填好的现成订阅 URL 重新拉取一次！
+    let targetSubUrl = subUrl;
+    const source = context?.source;
+    if (!targetSubUrl && source) {
+      for (const name in source) {
+        if (source[name]?.url && /^https?:\/\//i.test(source[name].url)) {
+          targetSubUrl = source[name].url;
+          logInfo(`[FlowerCloud] 自动读取当前订阅配置的现成链接: ${targetSubUrl}`);
+          break;
+        }
+      }
+    }
+
+    if (!targetSubUrl) {
       return proxies;
     }
 
-    $.info(`[FlowerCloud] 正在使用现成订阅链接拉取节点: ${subUrl}`);
+    logInfo(`[FlowerCloud] 正在拉取现成订阅链接节点: ${targetSubUrl}`);
     const { statusCode, body, headers } = await $.http.get({
-      url: subUrl,
+      url: targetSubUrl,
       headers: {
         'user-agent': subUA,
       },
@@ -234,7 +251,7 @@ async function operator(proxies = [], targetPlatform, context) {
 
     const subStatus = Number(statusCode || 0);
     if (subStatus < 200 || subStatus >= 400) {
-      $.error(`[FlowerCloud] 请求订阅地址失败，状态码 ${subStatus}，跳过`);
+      logError(`[FlowerCloud] 请求订阅地址失败，状态码 ${subStatus}，保留原节点列表`);
       return proxies;
     }
 
@@ -242,22 +259,21 @@ async function operator(proxies = [], targetPlatform, context) {
     try {
       parsed = ProxyUtils.parse(body);
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        $.error(`[FlowerCloud] 订阅不包含有效节点，跳过`);
+        logError(`[FlowerCloud] 订阅不包含有效节点，保留原节点列表`);
         return proxies;
       }
-      $.info(`[FlowerCloud] 成功解析节点数: ${parsed.length}`);
+      logInfo(`🎉 [FlowerCloud] 成功从现成链接解析节点数: ${parsed.length}`);
     } catch (e) {
-      $.error(`[FlowerCloud] 解析订阅节点失败: ${e.message ?? e}，跳过`);
+      logError(`[FlowerCloud] 解析订阅节点失败: ${e.message ?? e}，保留原节点列表`);
       return proxies;
     }
 
     const subscriptionUserinfo =
       headers?.['subscription-userinfo'] || headers?.['Subscription-Userinfo'];
     if (subscriptionUserinfo) {
-      $.info(`[FlowerCloud] 订阅流量信息: ${subscriptionUserinfo}`);
+      logInfo(`[FlowerCloud] 订阅流量信息: ${subscriptionUserinfo}`);
     }
 
-    const source = context?.source;
     if (source && $.read && $.write) {
       const allSubs = $.read(SUBS_KEY) || [];
       for (const name in source) {
@@ -265,7 +281,7 @@ async function operator(proxies = [], targetPlatform, context) {
         if (sub?.name) {
           for (let index = 0; index < allSubs.length; index++) {
             if (sub.name === allSubs[index].name) {
-              $.info(`[FlowerCloud] 写入订阅流量信息与节点内容到 Sub-Store 缓存`);
+              logInfo(`[FlowerCloud] 写入最新流量信息与节点内容到 Sub-Store`);
               if (subscriptionUserinfo) {
                 allSubs[index].subUserinfo = subscriptionUserinfo;
               }
@@ -281,7 +297,7 @@ async function operator(proxies = [], targetPlatform, context) {
 
     return parsed;
   } catch (err) {
-    $.error(`[FlowerCloud] 脚本执行异常: ${err.message ?? err}`);
+    logError(`[FlowerCloud] 脚本执行异常: ${err.message ?? err}`);
     return proxies;
   }
 }
