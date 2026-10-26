@@ -145,7 +145,9 @@ https://kelee.one/Tool/Loon/Lsr/REGION_SPLITTER.lsr, policy=DIRECT, tag=CN REGIO
 iosapps.itunes.apple.com = iosapps.itunes.apple.com.download.ks-cdn.com
 updates.cdn-apple.com = updates.cdn-apple.com.download.ks-cdn.com
 updates.g.aaplimg.com = updates.cdn-apple.com.download.ks-cdn.com
-
+2ad30bj6-fc51.aws-agent.com=59415bj8-09x2.apt-agent.dev
+6ed68gz8-2ad3.aws-agent.com=50196gz8-f6k7.apt-agent.dev
+fc513sh2-6ed6.aws-agent.com=21492sh1-b2d1.apt-agent.dev
 
 [Rewrite]
 
